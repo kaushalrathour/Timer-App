@@ -36,7 +36,6 @@ export default function NavigationContainer() {
     useEffect(()=>{
       (async ()=>{
         const timers : Timer[] =  await loadTimersFromAsync();
-        console.log(timers);
         dispatch(saveTimers(timers))
       })()
     },[])

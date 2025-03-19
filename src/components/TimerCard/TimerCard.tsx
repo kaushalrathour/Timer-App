@@ -7,9 +7,25 @@ import { createStyles } from "./style";
 import { ms } from "react-native-size-matters";
 import { deleteTimer, updateRemainingTimer, updateStatus } from "../../features/timerSlice";
 import { ProgressBar } from "react-native-paper";
+import notifee from "@notifee/react-native"
 
 
-export default function TimerCard({ id }): React.JSX.Element {
+
+const getCompletionMessage = (name: string)=>{
+  return {
+    title: "Congratulations!",
+    message: `You have completed the timer: ${name}`
+  }
+}
+
+const getHalfWayMessage = (name: string)=>{
+  return {
+    title: "Halfway Alert!",
+    message: `You have reached 50% of the timer: ${name}`
+  }
+}
+
+const TimerCard  = React.memo(({ id })=>  {
   const { colors, isDarkMode }: ThemeState = useSelector((state: any) => state.theme);
   const { timers }: TimerState = useSelector((state: any) => state.timer);
   const [halfReached, setHalfReached] = useState<boolean>(false);
@@ -17,13 +33,43 @@ export default function TimerCard({ id }): React.JSX.Element {
   const [progress, setProgress] = useState(0);
   const dispatch = useDispatch();
 
+
   const timer = timers.find(timer => timer.id === id);
+
 
   if (!timer) {
     return <Text>Loading...</Text>;
   }
 
   const { name, category, status, duration, remainingTime, halfwayAlert } = timer;
+  const completionMessage = useMemo(() => getCompletionMessage(name), [modalVisible]);
+  const halfWayMessage = useMemo(() => getHalfWayMessage(name), [halfReached]);
+  
+  const handleHalfwayNotification = async()=>{
+    console.log("HalfWay Notification Function Started");    
+    await notifee.displayNotification({
+      id: `halfway-alert-${id}`,
+      title: halfWayMessage.title,
+      body: halfWayMessage.message,
+      android: {
+        channelId: "default"
+      }
+    })
+    console.log("HalfWay Notification Function End");
+  }
+
+  const handleCompletionNotification = async()=> {
+    console.log("Completion Notification Function Started");    
+    await notifee.displayNotification({
+      id: `completion-alert-${id}`,
+      title: completionMessage.title,
+      body: completionMessage.message,
+      android: {
+        channelId: "default"
+      }
+    })
+    console.log("Completion Notification Function End");
+  }
 
   const getStatusIconName = () => {
     if (status === "running") {
@@ -48,21 +94,21 @@ export default function TimerCard({ id }): React.JSX.Element {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-  
-    console.log("Current Status:", status);
-  
     if (status === "running") {
       interval = setInterval(() => {
-        if (remainingTime <= 0) {
-          dispatch(updateStatus({ id, status: "completed" }));
-          setModalVisible(true);
-        }
         if (remainingTime > 0) {
           dispatch(updateRemainingTimer({ id, status }));
+          if(remainingTime === 1) {
+            setModalVisible(true);
+            setTimeout(()=>{
+              handleCompletionNotification();
+            }, 1000)
+          }
   
           if (!halfReached && remainingTime <= duration / 2 && halfwayAlert) {
             setHalfReached(true);
-            Alert.alert("Halfway Alert", `You have reached 50% of the timer: ${name}`);
+            // Alert.alert(halfWayMessage.title, halfWayMessage.message);
+            handleHalfwayNotification();
           }
         } 
   
@@ -70,7 +116,7 @@ export default function TimerCard({ id }): React.JSX.Element {
     }
   
     return () => clearInterval(interval);
-  }, [status, remainingTime, dispatch, id, halfReached, duration]);
+  }, [status, remainingTime, dispatch, id, halfReached]);
 
   useEffect(() => {
     if (timer.duration > 0) {
@@ -121,8 +167,8 @@ export default function TimerCard({ id }): React.JSX.Element {
         }}
       >
         <View style={styles.modalView}>
-          <Text style={styles.modalText}>Congratulations!</Text>
-          <Text style={styles.modalText}>You have completed the timer: {name}</Text>
+          <Text style={styles.modalText}>{completionMessage.title}</Text>
+          <Text style={styles.modalText}>{completionMessage.message}</Text>
           <TouchableOpacity
             style={styles.button}
             onPress={() => setModalVisible(!modalVisible)}
@@ -133,4 +179,6 @@ export default function TimerCard({ id }): React.JSX.Element {
       </Modal>
     </View>
   );
-}
+})
+
+export default TimerCard;

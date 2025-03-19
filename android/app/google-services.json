@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "19268654",
+    "project_id": "timerapp-f9184",
+    "storage_bucket": "timerapp-f9184.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:19268654:android:e4f24119d9d63f92e7cbbf",
+        "android_client_info": {
+          "package_name": "com.timerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5GzPxNqaReJOg1Q9l1CX2i7keMXmG4Ew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
